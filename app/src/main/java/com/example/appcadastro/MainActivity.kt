@@ -5,13 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,128 +67,187 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppCadastroTheme {
-                //Background theme
+                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    App(viewModel)
+                    App(viewModel, this)
                 }
             }
         }
     }
 }
 
+
 @Composable
-fun App(viewModel: PessoaViewModel){
+fun App(viewModel: PessoaViewModel, mainActivity: MainActivity){
     //Variáveis para armazenar os valores dos campos
-    var nome by remember{
+    var nome by remember {
         mutableStateOf("")
     }
 
-    var telefone by remember{
+    var telefone by remember {
         mutableStateOf("")
     }
 //Cria uma nova pessoa com os valores dos campos
-    val pessoa= Pessoa(
+    val pessoa = Pessoa(
         nome,
         telefone
     )
+
+    var pessoaList by remember {
+        mutableStateOf(listOf<Pessoa>())
+    }
+
+    viewModel.getPessoa().observe(mainActivity){
+        pessoaList = it
+    }
 //================================
     Column(
         Modifier
             .background(Color.White)
     ) {
-
-//================================
         Row(
             Modifier
-                .background(Color.White)
+                .padding(20.dp)
+        ){
+
+        }
+        //================================
+        Row(
+            Modifier
                 .fillMaxWidth(),
             Arrangement.Center
         ){
             Text(
-                text = "App Cadastro Cliente",
-                fontFamily =  FontFamily.SansSerif,
+                text = "App Cadastro",
+                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 fontSize = 30.sp
             )
+        }
+        Row(
+            Modifier
+                .padding(20.dp)
+        ){
 
         }
-//================================
+        //================================
 
 //Campos
 
 //Campo Nome
         Row(
             Modifier
-                .padding(20.dp)
+                .fillMaxWidth(),
+            Arrangement.Center
         ) {
-
+            TextField(
+                value = nome,
+                onValueChange = { nome = it },
+                label = { Text(text = "Nome:") }
+            )
         }
         Row(
             Modifier
-                .fillMaxWidth(),
-            Arrangement.Center
+                .padding(20.dp)
         ){
-            TextField(
-                value = nome,
-                onValueChange ={ nome = it },
-                label  = { Text(text = "Nome")}
-            )
-        }
 
-//===============================
+        }
+        //===============================
 //Campo Telefone
         Row(
             Modifier
-                .padding(20.dp)
-        ) {
-
-        }
-
-        Row(
-            Modifier
                 .fillMaxWidth(),
             Arrangement.Center
-        ){
+        ) {
             TextField(
                 value = telefone,
-                onValueChange ={ telefone = it },
-                label  = { Text(text = "Telefone") }
+                onValueChange = { telefone = it },
+                label = { Text(text = "Telefone:") }
             )
         }
-
+        Row(
+            Modifier
+                .padding(20.dp)
+        ){
 //================================
 
 
 //Button
-        Row(
-            Modifier
-                .padding(20.dp)
-        ) {
-
         }
-
         Row(
             Modifier
                 .fillMaxWidth(),
             Arrangement.Center
-        ) {
+        ){
             Button(
                 onClick = {
                     viewModel.upsertPessoa(pessoa)
+                    nome = ""
+                    telefone = ""
                 }
             ) {
                 Text(text = "Cadastrar")
             }
+        }
+        Row(
+            Modifier
+                .padding(20.dp)
+        ){
 
-
-
-
-
-
-
+        }
+        Row(
+            Modifier
+                .fillMaxWidth(),
+            Arrangement.Center
+        ){
+            Column(
+                Modifier
+                    .fillMaxWidth(0.5f)
+            ) {
+                Text(text = "Nome")
+            }
+            Column(
+                Modifier
+                    .fillMaxWidth(0.5f)
+            ) {
+                Text(text = "Telefone")
+            }
+        }
+        Divider()
+        LazyColumn {
+            //Define uma lista de itens
+            items(pessoaList){ pessoa ->
+//                //Define uma linha clicável que deleta uma pessoa quando clicada
+                Row(
+                    Modifier
+                        .clickable {
+                            viewModel.deletePessoa(pessoa)
+                        }
+                        .fillMaxWidth(),
+                    Arrangement.Center
+                ){
+                    Column(
+                        Modifier
+                            .fillMaxWidth(0.5f),
+                        Arrangement.Center
+                    ) {
+                        //define um texto como o nome da pessoa
+                        Text(text = "${pessoa.nome}")
+                    }
+                    Column(
+                        Modifier
+                            .fillMaxWidth(0.5f),
+                        Arrangement.Center
+                    ) {
+                        //define um texto como o telefone da pessoa
+                        Text(text = "${pessoa.telefone}")
+                    }
+                }
+                Divider()
+            }
         }
     }
 }
